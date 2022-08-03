@@ -11,6 +11,26 @@ import Layout from '../layout'
 
 export const asyncRoutes = [
   {
+    path: '/blockchain-manage',
+    name: 'BlockchainManage',
+    component: Layout,
+    redirect: '/blockchain-manage/index',
+    meta: {
+      title: '区块链管理',
+      icon: 'vue-dsn-icon-biaoge'
+    },
+    children: [
+      {
+        path: 'index',
+        name: 'Index',
+        component: () => import('../views/blockchain'),
+        meta: {
+          title: '区块链管理'
+        }
+      }
+    ]
+  },
+  {
     path: '/form-table',
     name: 'FormTable',
     component: Layout,

@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import { getTableList } from '@/api'
+// import { getTableList } from '@/api'
 import Hints from '@/components/Hints'
 
 export default {

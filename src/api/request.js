@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
-import { getToken } from './utils/cookie'
+import { getToken } from '../utils/cookie'
 
 // 创建axios实例
 const service = axios.create({
@@ -29,7 +29,7 @@ service.interceptors.response.use(
     const data = response.data
     const code = data.code
     const message = data.msg
-    if (code === 0) {
+    if (code === 200) {
       return data.data
     } else {
       Message({

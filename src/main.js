@@ -11,6 +11,10 @@ import 'element-ui/lib/theme-chalk/index.css'
 import ElementUI from 'element-ui'
 Vue.use(ElementUI, { size: 'small' })
 
+import Avue from '@smallwei/avue'
+import '@smallwei/avue/lib/index.css'
+Vue.use(Avue)
+
 Vue.config.productionTip = false
 
 new Vue({
