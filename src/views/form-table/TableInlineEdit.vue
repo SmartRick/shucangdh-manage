@@ -60,20 +60,20 @@ export default {
     fetchData() {
       this.listLoading = true
       // 获取数据列表接口
-      getTableList(this.listQuery).then(res => {
-        const data = res.data
-        if (data.code === 0) {
-          this.tableList = data.data.list.map(item => {
-            this.$set(item, 'editable', false)
-            item.originalHobby = item.hobby
-            return item
-          })
-          console.log(this.tableList)
-          this.listLoading = false
-        }
-      }).catch(() => {
-        this.listLoading = false
-      })
+      // getTableList(this.listQuery).then(res => {
+      //   const data = res.data
+      //   if (data.code === 0) {
+      //     this.tableList = data.data.list.map(item => {
+      //       this.$set(item, 'editable', false)
+      //       item.originalHobby = item.hobby
+      //       return item
+      //     })
+      //     console.log(this.tableList)
+      //     this.listLoading = false
+      //   }
+      // }).catch(() => {
+      //   this.listLoading = false
+      // })
     },
     cancelEdit(row) {
       row.hobby = row.originalHobby
