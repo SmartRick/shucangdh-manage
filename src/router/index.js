@@ -53,15 +53,6 @@ export const constantRoutes = [
     }]
   },
   {
-    path: 'https://github.com/baimingxuan/vue-admin-design.git',
-    name: 'doc',
-    component: Layout,
-    meta: {
-      title: '文档',
-      icon: 'vue-dsn-icon-wendang'
-    }
-  },
-  {
     path: '/',
     name: 'Layout',
     component: Layout,

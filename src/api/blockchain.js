@@ -2,7 +2,7 @@ import request from './request'
 
 export function ADD(data) {
   return request({
-    url: '/blockchain',
+    url: '/blockchain/',
     method: 'post',
     data
   })
@@ -10,7 +10,7 @@ export function ADD(data) {
 
 export function UPDATE(data) {
   return request({
-    url: '/blockchain',
+    url: '/blockchain/',
     method: 'put',
     data
   })

@@ -41,12 +41,10 @@ service.interceptors.response.use(
   },
   error => {
     const code = error.response.data.status
-    if (!code) {
-      Message({
-        type: 'error',
-        message: '接口请求失败'
-      })
-    }
+    Message({
+      type: 'error',
+      message: `接口请求失败${code}`
+    })
     return Promise.reject(error)
   }
 )
