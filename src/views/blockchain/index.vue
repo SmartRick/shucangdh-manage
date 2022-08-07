@@ -19,6 +19,7 @@
       <template slot="menuLeft" slot-scope="{size}">
         <el-button type="danger" icon="el-icon-delete" :size="size" @click="removeBatch">批量删除</el-button>
       </template>
+
     </avue-crud>
   </el-card>
 </template>

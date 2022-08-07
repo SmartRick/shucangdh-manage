@@ -1,6 +1,6 @@
 import request from './request'
 
-const modulePath = '/shucangPlatform/';
+const modulePath = '/platform/';
 export function ADD(data) {
   return request({
     url: modulePath,

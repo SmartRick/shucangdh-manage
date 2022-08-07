@@ -20,6 +20,40 @@
       <template slot="menuLeft" slot-scope="{size}">
         <el-button type="danger" icon="el-icon-delete" :size="size" @click="removeBatch">批量删除</el-button>
       </template>
+
+
+      <template slot-scope="{type,disabled}" slot="tagListForm">
+        <el-row v-for="(fromTag,index) in formTagList">
+          <el-col :span="4">
+            <el-button type="primary" icon="el-icon-plus" circle @click="formTagListAdd"></el-button>
+            <el-button type="danger" icon="el-icon-minus"  circle @click="formTagListDelete(index)"></el-button>
+          </el-col>
+          <el-col :span="4">
+            <el-select :inline="true" :disabled="disabled" value=""  v-model="fromTag.tagType"  placeholder="请选择标签类型">
+              <el-option v-for="item in tagTypeList" :label="item.name" :value="item.code" :key="item.code"></el-option>
+            </el-select>
+          </el-col>
+
+          <el-col  :span="7" v-if="fromTag.tagType === 1">
+            <el-select :inline="true" :disabled="disabled" value=""  v-model="fromTag.tagName"  placeholder="请输入客户端名称">
+              <el-option v-for="item in clientTypeList" :label="item" :value="item" :key="item"></el-option>
+            </el-select>
+<!--            <el-input :inline="true" :disabled="disabled" v-model="fromTag.tagName" placeholder="请输入客户端名称"></el-input>-->
+          </el-col>
+          <el-col  :span="7">
+            <el-input :inline="true" :disabled="disabled" v-model="fromTag.link" placeholder="请输入链接"></el-input>
+          </el-col>
+        </el-row>
+
+      </template>
+
+      <template slot="blockchainList" slot-scope="scope" >
+        <el-tag v-if="scope.row.blockchainList.length < 1">暂无</el-tag>
+        <el-tag v-for="item in scope.row.blockchainList">{{item.blockchain}}</el-tag>
+      </template>
+      <template slot="tagList" slot-scope="scope" >
+        <el-tag v-for="item in scope.row.tagList">{{item.tagName}}</el-tag>
+      </template>
     </avue-crud>
   </el-card>
 </template>
@@ -28,6 +62,18 @@
 
 import sucangPlatformApi from '../../api/sucang_platform'
 import blockchainAPi from '../../api/blockchain'
+import tagApi from '../../api/tag'
+
+const arr = [{
+  label: '选项1',
+  value: 1
+}, {
+  label: '选项2',
+  value: 2
+}, {
+  label: '选项3',
+  value: 3
+}]
 
 export default {
   name: 'Index',
@@ -48,8 +94,21 @@ export default {
       },
       data: [],
       selectedList: [],
+      blockchainDic: [],
+      clientDic: [],
+
+
+      formTagList: [
+        {
+          'tagName': '',
+          'tagType': '',
+          'link': ''
+        }
+      ],
       menuType: 'text',
-      showLoading: false
+      showLoading: false,
+      tagTypeList: tagApi.TAG_TYPE,
+      clientTypeList: tagApi.CLIENT_TYPE
     }
   },
   computed: {
@@ -123,15 +182,23 @@ export default {
           },
           {
             label: '上链信息',
-            prop: 'blockchainIds',
+            prop: 'blockchainList',
             search: true,
-            type: 'array',
+            type: 'select',
+            dicData: this.blockchainDic,
+            multiple: true,
+            slot:true
           },
           {
-            label: '客户端类型',
-            prop: 'tagIds',
-            type: 'array',
+            label: '标签',
+            prop: 'tagList',
+            type: 'select',
+            multiple: true,
+            dicData: arr,
+            formslot: true,
+            span:24,
             search: true,
+            slot:true
           },
         ]
       }
@@ -186,6 +253,7 @@ export default {
     },
     rowSave(form, done, loading) {
       // 添加数据方法
+      form.tagList = this.formTagList
       sucangPlatformApi.ADD(form).then(res => {
         done(form)
       }).catch(() => {
@@ -216,16 +284,34 @@ export default {
       console.log('刷新数据')
       this.fetchData()
     },
-    beforeSaveOpen(done,type) {
-
+    beforeSaveOpen(done, type) {
+      const _this = this;
       blockchainAPi.PAGE({
         pageNum: 1,
         pageSize: 100,
         searchCount: true
       }).then(res => {
         console.log(res)
+        _this.blockchainDic = res.list.map(item => {
+          return {
+            'label': item.blockchain,
+            'value': item.id
+          }
+        })
       });
       done();
+    },
+    formTagListAdd(){
+      this.formTagList.push({
+        'tagName': '',
+        'tagType': '',
+        'link': ''
+      })
+    },
+    formTagListDelete(index){
+      if (this.formTagList.length>1){
+        this.formTagList.splice(index,1)
+      }
     }
   }
 }
