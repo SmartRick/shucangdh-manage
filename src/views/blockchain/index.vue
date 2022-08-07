@@ -25,7 +25,7 @@
 
 <script>
 
-import { ADD, PAGE, REMOVES, REMOVE, UPDATE } from '../../api/blockchain'
+import blockchainAPi from '../../api/blockchain'
 
 export default {
   name: 'Index',
@@ -157,7 +157,7 @@ export default {
       const _this = this
       this.queryParams.pageNum = this.page.currentPage
       this.queryParams.pageSize = this.page.pageSize
-      PAGE(this.queryParams).then(res => {
+      blockchainAPi.PAGE(this.queryParams).then(res => {
         console.log(res)
         _this.page.total = res.total
         _this.page.currentPage = res.pageNum
@@ -166,7 +166,7 @@ export default {
     },
     rowSave(form, done, loading) {
       // 添加数据方法
-      ADD(form).then(res => {
+      blockchainAPi.ADD(form).then(res => {
         done(form)
       }).catch(() => {
         loading()
@@ -174,7 +174,7 @@ export default {
     },
     rowUpdate(form, index, done, loading) {
       // 更新数据
-      UPDATE(form).then(res => {
+      blockchainAPi.UPDATE(form).then(res => {
         done(form)
         this.$message.success('更新成功')
       }).catch(() => {
@@ -186,7 +186,7 @@ export default {
       this.$confirm('确定要删除该行数据吗，删除后无法找回', {
         type: 'warning'
       }).then(() => {
-        REMOVE(form.id).then(res => {
+        blockchainAPi.REMOVE(form.id).then(res => {
           this.fetchData()
           this.$message.success('删除成功')
         })

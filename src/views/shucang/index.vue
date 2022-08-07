@@ -6,6 +6,7 @@
       :option="option"
       :table-loading="showLoading"
       :page.sync="page"
+      :before-open="beforeSaveOpen"
       @search-change="searchChange"
       @search-reset="resetChange"
       @selection-change="selectionChange"
@@ -25,17 +26,19 @@
 
 <script>
 
-import { ADD, PAGE, REMOVES, REMOVE, UPDATE } from '../../api/blockchain'
+import sucangPlatformApi from '../../api/sucang_platform'
+import blockchainAPi from '../../api/blockchain'
 
 export default {
   name: 'Index',
   data() {
     return {
       queryParams: {
-        blockchain: '',
+        marketModel: '',
+        name: '',
+        remark: '',
         pageNum: 1,
         pageSize: 10,
-        remark: '',
         searchCount: true
       },
       page: {
@@ -73,17 +76,20 @@ export default {
         searchIcon: true,
         column: [
           {
-            label: '区块链名称',
-            prop: 'blockchain',
+            label: '封面',
+            prop: 'coverImg',
+            type: 'img'
+          },
+          {
+            label: '平台',
+            prop: 'name',
             search: true,
             searchOrder: 1,
             searchLabelWidth: 100,
-            // searchSpan: 18,
-            // searchRange: true
             rules: [
               {
                 required: true,
-                message: '请输入区块链名称',
+                message: '请输入平台名称',
                 trigger: 'blur'
               }
             ]
@@ -93,33 +99,47 @@ export default {
             prop: 'remark',
             search: true,
             // 内容超出隐藏
-            overHidden: true
-          },
-          {
-            label: '官方地址',
-            prop: 'link',
-            type: 'url',
-            // 内容超出隐藏
             overHidden: true,
             rules: [
               {
                 required: true,
-                message: '请输入区块链官方地址',
+                message: '请输入简介',
                 trigger: 'blur'
               }
             ]
           },
           {
-            label: '主题色',
-            prop: 'backgroundColor',
-            type: 'color'
-          }
+            label: '交易机制',
+            prop: 'marketModel',
+            search: true,
+            rules: [
+              {
+                required: true,
+                message: '交易机制',
+                trigger: 'blur',
+
+              }
+            ]
+          },
+          {
+            label: '上链信息',
+            prop: 'blockchainIds',
+            search: true,
+            type: 'array',
+          },
+          {
+            label: '客户端类型',
+            prop: 'tagIds',
+            type: 'array',
+            search: true,
+          },
         ]
       }
     }
   },
   watch: {},
   mounted() {
+
     // this.fetchData()
   },
   methods: {
@@ -143,7 +163,7 @@ export default {
           type: 'warning'
         }).then(() => {
           const removeIds = this.selectedList.map(item => item.id)
-          REMOVES(removeIds).then(res => {
+          sucangPlatformApi.REMOVES(removeIds).then(res => {
             // console.log(res)
             _this.fetchData()
           })
@@ -157,7 +177,7 @@ export default {
       const _this = this
       this.queryParams.pageNum = this.page.currentPage
       this.queryParams.pageSize = this.page.pageSize
-      PAGE(this.queryParams).then(res => {
+      sucangPlatformApi.PAGE(this.queryParams).then(res => {
         console.log(res)
         _this.page.total = res.total
         _this.page.currentPage = res.pageNum
@@ -166,7 +186,7 @@ export default {
     },
     rowSave(form, done, loading) {
       // 添加数据方法
-      ADD(form).then(res => {
+      sucangPlatformApi.ADD(form).then(res => {
         done(form)
       }).catch(() => {
         loading()
@@ -174,7 +194,7 @@ export default {
     },
     rowUpdate(form, index, done, loading) {
       // 更新数据
-      UPDATE(form).then(res => {
+      sucangPlatformApi.UPDATE(form).then(res => {
         done(form)
         this.$message.success('更新成功')
       }).catch(() => {
@@ -186,7 +206,7 @@ export default {
       this.$confirm('确定要删除该行数据吗，删除后无法找回', {
         type: 'warning'
       }).then(() => {
-        REMOVE(form.id).then(res => {
+        sucangPlatformApi.REMOVE(form.id).then(res => {
           this.fetchData()
           this.$message.success('删除成功')
         })
@@ -195,6 +215,17 @@ export default {
     refreshChange() {
       console.log('刷新数据')
       this.fetchData()
+    },
+    beforeSaveOpen(done,type) {
+
+      blockchainAPi.PAGE({
+        pageNum: 1,
+        pageSize: 100,
+        searchCount: true
+      }).then(res => {
+        console.log(res)
+      });
+      done();
     }
   }
 }

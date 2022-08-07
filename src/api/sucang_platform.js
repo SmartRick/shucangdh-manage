@@ -1,5 +1,6 @@
 import request from './request'
-const modulePath = '/blockchain/';
+
+const modulePath = '/shucangPlatform/';
 export function ADD(data) {
   return request({
     url: modulePath,
@@ -7,7 +8,6 @@ export function ADD(data) {
     data
   })
 }
-
 export function UPDATE(data) {
   return request({
     url: modulePath,
@@ -26,14 +26,14 @@ export function PAGE(data) {
 
 export function GET(id) {
   return request({
-    url: modulePath+ id,
+    url:modulePath + id,
     method: 'get'
   })
 }
 
 export function REMOVES(data) {
   return request({
-    url: modulePath+'removes',
+    url:modulePath+'removes',
     method: 'delete',
     data
   })
@@ -41,11 +41,10 @@ export function REMOVES(data) {
 
 export function REMOVE(id) {
   return request({
-    url: '/blockchain/' + id,
+    url: modulePath + id,
     method: 'delete'
   })
 }
-
 export default {
   ADD,
   UPDATE,
@@ -54,3 +53,4 @@ export default {
   REMOVES,
   REMOVE
 }
+
