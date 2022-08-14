@@ -144,8 +144,8 @@ export default {
           type: 'warning'
         }).then(() => {
           const removeIds = this.selectedList.map(item => item.id)
-          REMOVES(removeIds).then(res => {
-            // console.log(res)
+          blockchainAPi.REMOVES(removeIds).then(res => {
+            this.$message.success('批量删除' + removeIds.length + '个数据成功')
             _this.fetchData()
           })
         })
@@ -166,14 +166,17 @@ export default {
       })
     },
     rowSave(form, done, loading) {
+      form.link = form.link != null && form.link.length > 0 ? form.link[0] : ''
       // 添加数据方法
       blockchainAPi.ADD(form).then(res => {
         done(form)
+        this.$message.success('添加成功')
       }).catch(() => {
         loading()
       })
     },
     rowUpdate(form, index, done, loading) {
+      form.link = form.link != null && form.link.length > 0 ? form.link[0] : ''
       // 更新数据
       blockchainAPi.UPDATE(form).then(res => {
         done(form)

@@ -49,26 +49,6 @@ export const asyncRoutes = [
         }
       }
     ]
-  },
-  {
-    path: '/tags-manage',
-    name: 'TagsManage',
-    component: Layout,
-    redirect: '/tags-manage/index',
-    meta: {
-      title: '标签管理',
-      icon: 'vue-dsn-icon-biaoge'
-    },
-    children: [
-      {
-        path: 'index',
-        name: 'Index',
-        component: () => import('../views/tags'),
-        meta: {
-          title: '标签管理'
-        }
-      }
-    ]
   }
   // {
   //   path: '/form-table',

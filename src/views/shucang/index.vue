@@ -1,12 +1,14 @@
 <template>
   <el-card>
     <avue-crud
+      v-model="formData"
       :data="data"
       :search.sync="queryParams"
       :option="option"
       :table-loading="showLoading"
       :page.sync="page"
       :before-open="beforeSaveOpen"
+      :upload-after="uploadAfter"
       @search-change="searchChange"
       @search-reset="resetChange"
       @selection-change="selectionChange"
@@ -21,38 +23,38 @@
         <el-button type="danger" icon="el-icon-delete" :size="size" @click="removeBatch">批量删除</el-button>
       </template>
 
-
-      <template slot-scope="{type,disabled}" slot="tagListForm">
-        <el-row v-for="(fromTag,index) in formTagList">
-          <el-col :span="4">
-            <el-button type="primary" icon="el-icon-plus" circle @click="formTagListAdd"></el-button>
-            <el-button type="danger" icon="el-icon-minus"  circle @click="formTagListDelete(index)"></el-button>
+      <template slot="tagListForm" slot-scope="{type,disabled,value}">
+        {{ initTagValue(value) }}
+        <el-row v-for="(fromTag,index) in value" :key="index" style="margin: 5px 0">
+          <el-col :span="3">
+            <el-button type="primary" icon="el-icon-plus" circle @click="formTagListAdd(value)" />
+            <el-button type="danger" icon="el-icon-minus" circle @click="formTagListDelete(value,index)" />
           </el-col>
-          <el-col :span="4">
-            <el-select :inline="true" :disabled="disabled" value=""  v-model="fromTag.tagType"  placeholder="请选择标签类型">
-              <el-option v-for="item in tagTypeList" :label="item.name" :value="item.code" :key="item.code"></el-option>
+          <el-col :span="5" style="padding: 0 5px">
+            <el-select v-model="fromTag.tagType" :inline="true" :disabled="disabled" value="" placeholder="请选择标签类型">
+              <el-option v-for="item in tagTypeList" :key="item.code" :label="item.name" :value="item.code" />
             </el-select>
           </el-col>
 
-          <el-col  :span="7" v-if="fromTag.tagType === 1">
-            <el-select :inline="true" :disabled="disabled" value=""  v-model="fromTag.tagName"  placeholder="请输入客户端名称">
-              <el-option v-for="item in clientTypeList" :label="item" :value="item" :key="item"></el-option>
+          <el-col v-if="fromTag.tagType === 1" :span="6" style="padding: 0 5px">
+            <el-select v-model="fromTag.tagName" :inline="true" :disabled="disabled" value="" placeholder="请输入客户端名称">
+              <el-option v-for="item in clientTypeList" :key="item" :label="item" :value="item" />
             </el-select>
-<!--            <el-input :inline="true" :disabled="disabled" v-model="fromTag.tagName" placeholder="请输入客户端名称"></el-input>-->
+            <!--            <el-input :inline="true" :disabled="disabled" v-model="fromTag.tagName" placeholder="请输入客户端名称"></el-input>-->
           </el-col>
-          <el-col  :span="7">
-            <el-input :inline="true" :disabled="disabled" v-model="fromTag.link" placeholder="请输入链接"></el-input>
+          <el-col :span="6" style="padding: 0 5px">
+            <el-input v-model="fromTag.link" :inline="true" :disabled="disabled" placeholder="请输入链接" />
           </el-col>
         </el-row>
-
       </template>
 
-      <template slot="blockchainList" slot-scope="scope" >
+      <template slot="blockchainList" slot-scope="scope">
         <el-tag v-if="scope.row.blockchainList.length < 1">暂无</el-tag>
-        <el-tag v-for="item in scope.row.blockchainList">{{item.blockchain}}</el-tag>
+        <el-tag v-for="item in scope.row.blockchainList" :key="item.id" style="margin: 0 1px">{{ blockchainDic.find(each => each.value === item).label }}</el-tag>
       </template>
-      <template slot="tagList" slot-scope="scope" >
-        <el-tag v-for="item in scope.row.tagList">{{item.tagName}}</el-tag>
+      <template slot="tagList" slot-scope="scope">
+        <el-tag v-if="scope.row.tagList.length < 1">暂无</el-tag>
+        <el-tag v-for="item in scope.row.tagList" :key="item.id" style="margin: 0 1px">{{ item.tagName }}</el-tag>
       </template>
     </avue-crud>
   </el-card>
@@ -63,17 +65,6 @@
 import sucangPlatformApi from '../../api/sucang_platform'
 import blockchainAPi from '../../api/blockchain'
 import tagApi from '../../api/tag'
-
-const arr = [{
-  label: '选项1',
-  value: 1
-}, {
-  label: '选项2',
-  value: 2
-}, {
-  label: '选项3',
-  value: 3
-}]
 
 export default {
   name: 'Index',
@@ -92,12 +83,11 @@ export default {
         currentPage: 1,
         pageSize: 10
       },
+      formData: {},
       data: [],
       selectedList: [],
       blockchainDic: [],
       clientDic: [],
-
-
       formTagList: [
         {
           'tagName': '',
@@ -105,10 +95,12 @@ export default {
           'link': ''
         }
       ],
+      formRemark: '',
       menuType: 'text',
       showLoading: false,
       tagTypeList: tagApi.TAG_TYPE,
-      clientTypeList: tagApi.CLIENT_TYPE
+      clientTypeList: tagApi.CLIENT_TYPE,
+      marketModuleList: sucangPlatformApi.MARKET_MODULE
     }
   },
   computed: {
@@ -137,10 +129,21 @@ export default {
           {
             label: '封面',
             prop: 'coverImg',
-            type: 'img'
+            listType: 'picture-img',
+            type: 'upload',
+            span: 24,
+            accept: 'image/png, image/jpeg, image/gif',
+            propsHttp: {
+              // res: 'data',
+              // name: 'data.url'
+              // home: 'http://rgl6i3hwh.hn-bkt.clouddn.com'
+            },
+            tip: '只能上传jpg/png/gif，且不超过2MB',
+            loadText: '图片上传中，请稍等',
+            action: '/auImgs'
           },
           {
-            label: '平台',
+            label: '平台名称',
             prop: 'name',
             search: true,
             searchOrder: 1,
@@ -154,11 +157,40 @@ export default {
             ]
           },
           {
+            label: '交易机制',
+            prop: 'marketModel',
+            type: 'select',
+            search: true,
+            dicData: this.marketModuleList,
+            rules: [
+              {
+                required: true,
+                message: '交易机制',
+                trigger: 'blur'
+              }
+            ],
+            formatter: (val, value, label) => {
+              const find = this.marketModuleList.find(item => item.value === value)
+              return find == null ? '未知' : find.label
+            }
+          },
+          {
+            label: '上链信息',
+            prop: 'blockchainList',
+            search: true,
+            type: 'select',
+            dicData: this.blockchainDic,
+            multiple: true,
+            slot: true
+          },
+          {
             label: '简介',
             prop: 'remark',
+            type: 'textarea',
             search: true,
             // 内容超出隐藏
             overHidden: true,
+            span: 24,
             rules: [
               {
                 required: true,
@@ -168,46 +200,33 @@ export default {
             ]
           },
           {
-            label: '交易机制',
-            prop: 'marketModel',
-            search: true,
-            rules: [
-              {
-                required: true,
-                message: '交易机制',
-                trigger: 'blur',
-
-              }
-            ]
-          },
-          {
-            label: '上链信息',
-            prop: 'blockchainList',
-            search: true,
-            type: 'select',
-            dicData: this.blockchainDic,
-            multiple: true,
-            slot:true
-          },
-          {
             label: '标签',
             prop: 'tagList',
             type: 'select',
             multiple: true,
-            dicData: arr,
-            formslot: true,
-            span:24,
-            search: true,
-            slot:true
-          },
+            span: 24,
+            slot: true
+          }
         ]
       }
     }
   },
   watch: {},
   mounted() {
-
-    // this.fetchData()
+    const _this = this
+    blockchainAPi.PAGE({
+      pageNum: 1,
+      pageSize: 100,
+      searchCount: true
+    }).then(res => {
+      console.log(res)
+      _this.blockchainDic = res.list.map(item => {
+        return {
+          label: item.blockchain,
+          value: item.id
+        }
+      })
+    })
   },
   methods: {
     searchChange(params, done) {
@@ -231,7 +250,7 @@ export default {
         }).then(() => {
           const removeIds = this.selectedList.map(item => item.id)
           sucangPlatformApi.REMOVES(removeIds).then(res => {
-            // console.log(res)
+            this.$message.success('批量删除' + removeIds.length + '个数据成功')
             _this.fetchData()
           })
         })
@@ -256,6 +275,7 @@ export default {
       form.tagList = this.formTagList
       sucangPlatformApi.ADD(form).then(res => {
         done(form)
+        this.$message.success('添加成功')
       }).catch(() => {
         loading()
       })
@@ -285,33 +305,41 @@ export default {
       this.fetchData()
     },
     beforeSaveOpen(done, type) {
-      const _this = this;
-      blockchainAPi.PAGE({
-        pageNum: 1,
-        pageSize: 100,
-        searchCount: true
-      }).then(res => {
-        console.log(res)
-        _this.blockchainDic = res.list.map(item => {
-          return {
-            'label': item.blockchain,
-            'value': item.id
-          }
-        })
-      });
-      done();
+      done()
     },
-    formTagListAdd(){
-      this.formTagList.push({
+    formTagListAdd(value) {
+      value.push({
         'tagName': '',
         'tagType': '',
         'link': ''
       })
     },
-    formTagListDelete(index){
-      if (this.formTagList.length>1){
-        this.formTagList.splice(index,1)
+    formTagListDelete(value, index) {
+      if (value.length > 1) {
+        value.splice(index, 1)
       }
+    },
+    // 上传图片后回调函数
+    uploadAfter(res, done, loading, column) {
+      if (res.code !== 200) {
+        loading()
+      }
+      done()
+    },
+    initTagValue(value) {
+      if (value === undefined) return
+      if (value == null || value.length === 0) {
+        value.push({
+          'tagName': '',
+          'tagType': '',
+          'link': ''
+        })
+      }
+      // return value == null || value.length === 0 ? [{
+      //   'tagName': '',
+      //   'tagType': '',
+      //   'link': ''
+      // }] : value
     }
   }
 }

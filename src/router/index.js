@@ -55,6 +55,7 @@ export const constantRoutes = [
   {
     path: '/',
     name: 'Layout',
+    alias: '/home',
     component: Layout,
     redirect: '/user-center',
     hidden: true,
@@ -66,12 +67,20 @@ export const constantRoutes = [
         title: '个人中心'
       }
     }]
+  },
+  {
+    path: '*',
+    name: '404',
+    component: import('../views/error-page/404'),
+    hidden: true,
+    meta: { title: '404' }
   }
 ]
 
 const routes = [...constantRoutes, ...asyncRoutes]
 
 export default new Router({
+  // mode: 'history',
   routes
 })
 
