@@ -26,7 +26,7 @@
 
 <script>
 
-import blockchainAPi from '../../api/blockchain'
+import blockchainAPi from '../../api/api_blockchain'
 
 export default {
   name: 'Index',

@@ -32,10 +32,9 @@
           </el-col>
           <el-col :span="5" style="padding: 0 5px">
             <el-select v-model="fromTag.tagType" :inline="true" :disabled="disabled" value="" placeholder="请选择标签类型">
-              <el-option v-for="item in tagTypeList" :key="item.code" :label="item.name" :value="item.code" />
+              <el-option v-for="(typeName, typeCode) in tagTypeMap" :key="typeCode" :label="typeName" :value="parseInt(typeCode)" />
             </el-select>
           </el-col>
-
           <el-col v-if="fromTag.tagType === 1" :span="6" style="padding: 0 5px">
             <el-select v-model="fromTag.tagName" :inline="true" :disabled="disabled" value="" placeholder="请输入客户端名称">
               <el-option v-for="item in clientTypeList" :key="item" :label="item" :value="item" />
@@ -49,12 +48,12 @@
       </template>
 
       <template slot="blockchainList" slot-scope="scope">
-        <el-tag v-if="scope.row.blockchainList.length < 1">暂无</el-tag>
-        <el-tag v-for="item in scope.row.blockchainList" :key="item.id" style="margin: 0 1px">{{ blockchainDic.find(each => each.value === item).label }}</el-tag>
+        <el-tag v-if="!scope.row.blockchainList || (scope.row.blockchainList && scope.row.blockchainList.length < 1)">暂无</el-tag>
+        <el-tag v-for="item in scope.row.blockchainList" v-else v-show="blockchainDic.find(each => each.value === item)" :key="item.id" style="margin: 0 1px">{{ blockchainDic.find(each => each.value === item)?blockchainDic.find(each => each.value === item).label:'' }}</el-tag>
       </template>
       <template slot="tagList" slot-scope="scope">
-        <el-tag v-if="scope.row.tagList.length < 1">暂无</el-tag>
-        <el-tag v-for="item in scope.row.tagList" :key="item.id" style="margin: 0 1px">{{ item.tagName }}</el-tag>
+        <el-tag v-if="!scope.row.tagList || (scope.row.tagList && scope.row.tagList.length < 1)">暂无</el-tag>
+        <el-tag v-for="item in scope.row.tagList" v-else :key="item.id" style="margin: 0 1px">{{ item.tagName }}</el-tag>
       </template>
     </avue-crud>
   </el-card>
@@ -62,9 +61,10 @@
 
 <script>
 
-import sucangPlatformApi from '../../api/sucang_platform'
-import blockchainAPi from '../../api/blockchain'
-import tagApi from '../../api/tag'
+import shucangPlatformApi from '../../api/api_shucang_platform'
+import blockchainAPi from '../../api/api_blockchain'
+import tagApi from '../../api/api_tag'
+const fail_img2 = require('@/assets/img/fail_img2.png')
 
 export default {
   name: 'Index',
@@ -98,9 +98,9 @@ export default {
       formRemark: '',
       menuType: 'text',
       showLoading: false,
-      tagTypeList: tagApi.TAG_TYPE,
+      tagTypeMap: tagApi.TAG_MAP,
       clientTypeList: tagApi.CLIENT_TYPE,
-      marketModuleList: sucangPlatformApi.MARKET_MODULE
+      marketModuleList: shucangPlatformApi.MARKET_MODULE
     }
   },
   computed: {
@@ -140,7 +140,10 @@ export default {
             },
             tip: '只能上传jpg/png/gif，且不超过2MB',
             loadText: '图片上传中，请稍等',
-            action: '/auImgs'
+            action: '/auImgs',
+            formatter: (val, value, label) => {
+              return value || fail_img2
+            }
           },
           {
             label: '平台名称',
@@ -162,16 +165,16 @@ export default {
             type: 'select',
             search: true,
             dicData: this.marketModuleList,
-            rules: [
-              {
-                required: true,
-                message: '交易机制',
-                trigger: 'blur'
-              }
-            ],
+            // rules: [
+            //   {
+            //     required: true,
+            //     message: '交易机制',
+            //     trigger: 'blur'
+            //   }
+            // ],
             formatter: (val, value, label) => {
               const find = this.marketModuleList.find(item => item.value === value)
-              return find == null ? '未知' : find.label
+              return find ? find.label : '未知'
             }
           },
           {
@@ -191,13 +194,16 @@ export default {
             // 内容超出隐藏
             overHidden: true,
             span: 24,
-            rules: [
-              {
-                required: true,
-                message: '请输入简介',
-                trigger: 'blur'
-              }
-            ]
+            formatter: (val, value, label) => {
+              return value || '暂无'
+            }
+            // rules: [
+            //   {
+            //     required: true,
+            //     message: '请输入简介',
+            //     trigger: 'blur'
+            //   }
+            // ]
           },
           {
             label: '标签',
@@ -213,6 +219,8 @@ export default {
   },
   watch: {},
   mounted() {
+    console.log(Object.keys(tagApi.TAG_MAP))
+
     const _this = this
     blockchainAPi.PAGE({
       pageNum: 1,
@@ -249,7 +257,7 @@ export default {
           type: 'warning'
         }).then(() => {
           const removeIds = this.selectedList.map(item => item.id)
-          sucangPlatformApi.REMOVES(removeIds).then(res => {
+          shucangPlatformApi.REMOVES(removeIds).then(res => {
             this.$message.success('批量删除' + removeIds.length + '个数据成功')
             _this.fetchData()
           })
@@ -263,7 +271,8 @@ export default {
       const _this = this
       this.queryParams.pageNum = this.page.currentPage
       this.queryParams.pageSize = this.page.pageSize
-      sucangPlatformApi.PAGE(this.queryParams).then(res => {
+      this.queryParams.tagTypes = Object.keys(tagApi.TAG_MAP).map(key => parseInt(key))
+      shucangPlatformApi.PAGE(this.queryParams).then(res => {
         console.log(res)
         _this.page.total = res.total
         _this.page.currentPage = res.pageNum
@@ -272,8 +281,17 @@ export default {
     },
     rowSave(form, done, loading) {
       // 添加数据方法
-      form.tagList = this.formTagList
-      sucangPlatformApi.ADD(form).then(res => {
+      const _this = this
+      form.tagList.map(item => {
+        if (item.tagName === '') {
+          if (item.tagType === 2) {
+            item.tagName = '天眼查'
+          } else {
+            item.tagName = _this.tagTypeMap[item.tagType]
+          }
+        }
+      })
+      shucangPlatformApi.ADD(form).then(res => {
         done(form)
         this.$message.success('添加成功')
       }).catch(() => {
@@ -282,7 +300,17 @@ export default {
     },
     rowUpdate(form, index, done, loading) {
       // 更新数据
-      sucangPlatformApi.UPDATE(form).then(res => {
+      const _this = this
+      form.tagList.map(item => {
+        if (item.tagName === '') {
+          if (item.tagType === 2) {
+            item.tagName = '天眼查'
+          } else {
+            item.tagName = _this.tagTypeMap[item.tagType]
+          }
+        }
+      })
+      shucangPlatformApi.UPDATE(form).then(res => {
         done(form)
         this.$message.success('更新成功')
       }).catch(() => {
@@ -294,7 +322,7 @@ export default {
       this.$confirm('确定要删除该行数据吗，删除后无法找回', {
         type: 'warning'
       }).then(() => {
-        sucangPlatformApi.REMOVE(form.id).then(res => {
+        shucangPlatformApi.REMOVE(form.id).then(res => {
           this.fetchData()
           this.$message.success('删除成功')
         })

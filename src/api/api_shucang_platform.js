@@ -14,6 +14,10 @@ const MARKET_MODULE = [
   {
     label: '交易市场',
     value: '3'
+  },
+  {
+    label: '官方宣发',
+    value: '4'
   }
 ]
 
@@ -58,6 +62,11 @@ export default {
       url: modulePath + id,
       method: 'delete'
     })
+  },
+  MARKET_MODEL_LIST() {
+    return request({
+      url: modulePath + 'marketModel',
+      method: 'get'
+    })
   }
 }
-
